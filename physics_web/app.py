@@ -6,16 +6,9 @@ import matplotlib.pyplot as plt
 # --- 1. 页面配置 ---
 st.set_page_config(page_title="偏振光实验数据处理", layout="wide")
 
-# --- 2. 中文字体修正 (兼容 Linux/Windows/Mac) ---
-# 云端服务器通常使用 WenQuanYi Micro Hei 字体显示中文
-plt.rcParams['font.sans-serif'] = [
-    'SimHei', 
-    'WenQuanYi Micro Hei', 
-    'Arial Unicode MS', 
-    'Songti SC', 
-    'sans-serif'
-]
-plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示为方块的问题
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'SimHei', 'sans-serif']
+plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
 # --- 3. 页面标题与简介 ---
 st.title("🌟 偏振光的观测与研究 - 实验作图工具")
