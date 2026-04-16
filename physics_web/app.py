@@ -2,14 +2,27 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+import urllib.request
+import matplotlib.font_manager as font_manager
 
 # --- 1. 页面配置 ---
 st.set_page_config(page_title="偏振光实验数据处理", layout="wide")
 
-# 设置中文字体
-plt.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'SimHei', 'sans-serif']
-plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+# --- 2. 中文字体终极修正法 (强行下载并加载黑体) ---
+font_path = "SimHei.ttf"
+# 如果服务器里没有字体文件，就自动从网上下载一个
+if not os.path.exists(font_path):
+    url = "https://raw.githubusercontent.com/halfrost/Halfrost-Field/master/recipes/SimHei.ttf"
+    urllib.request.urlretrieve(url, font_path)
 
+# 强制 Matplotlib 识别并使用这个字体
+font_manager.fontManager.addfont(font_path)
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 指定使用黑体
+plt.rcParams['axes.unicode_minus'] = False    # 解决负号显示问题
+
+# --- 3. 页面标题与简介 ---
+# （下面保留你原来的代码...）
 # --- 3. 页面标题与简介 ---
 st.title("🌟 偏振光的观测与研究 - 实验作图工具")
 st.markdown("""
