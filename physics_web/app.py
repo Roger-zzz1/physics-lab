@@ -1,132 +1,47 @@
-import streamlit as st
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
-import urllib.request
-import matplotlib.font_manager as font_manager
 
-# --- 1. 页面配置 ---
-st.set_page_config(page_title="偏振光实验数据处理", layout="wide")
+# --- 1. 在这里填入你的实验测量数据 ---
+# 表1：马吕斯定律 (7个数据点)
+i_measured_1 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) 
 
-# --- 2. 中文字体修正 (添加请求头防止被拦截) ---
-font_path = "SimHei.ttf"
+# 表2：1/2 波片 (25个数据点，0°到360°)
+i_measured_2 = np.array([0.0] * 25) 
 
-if not os.path.exists(font_path):
-    url = "https://raw.githubusercontent.com/halfrost/Halfrost-Field/master/recipes/SimHei.ttf"
-    try:
-        # 构造带有浏览器标识的请求
-        opener = urllib.request.build_opener()
-        opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')]
-        urllib.request.install_opener(opener)
-        
-        # 执行下载
-        urllib.request.urlretrieve(url, font_path)
-    except Exception as e:
-        st.error(f"字体下载失败: {e}")
-        # 如果下载失败，尝试使用系统默认字体以免崩溃
-        plt.rcParams['font.sans-serif'] = ['DejaVu Sans'] 
+# 表3：1/4 波片 (各13个数据点，0°到360°)
+i_30 = np.array([0.0] * 13) 
+i_45 = np.array([0.0] * 13) 
+i_90 = np.array([0.0] * 13) 
 
-if os.path.exists(font_path):
-    font_manager.fontManager.addfont(font_path)
-    plt.rcParams['font.sans-serif'] = ['SimHei']
-# 强制 Matplotlib 识别并使用这个字体
-font_manager.fontManager.addfont(font_path)
-plt.rcParams['font.sans-serif'] = ['SimHei']  # 指定使用黑体
-plt.rcParams['axes.unicode_minus'] = False    # 解决负号显示问题
+# --- 2. 坐标与理论值计算 ---
+theta_1_deg = np.array([0, 15, 30, 45, 60, 75, 90])
+# 理论值：I_theory = I_max * cos^2(theta)
+i_theory_1 = i_measured_1[0] * np.cos(np.radians(theta_1_deg))**2
 
-# --- 3. 页面标题与简介 ---
-# （下面保留你原来的代码...）
-# --- 3. 页面标题与简介 ---
-st.title("🌟 偏振光的观测与研究 - 实验作图工具")
-st.markdown("""
-本工具用于处理大学物理实验“偏振光的观测与研究”数据。  
-**使用说明：** 1. 在下方表格中双击单元格填入你的测量数据。
-2. 填写完毕后，点击底部的 **“🚀 生成图像”** 按钮。
-3. 生成的图像可以右键另存为图片，用于实验报告。
-""")
+theta_2_rad = np.radians(np.arange(0, 361, 15))
+theta_3_rad = np.radians(np.arange(0, 361, 30))
 
-# --- 4. 数据输入区域 ---
-st.divider()
+# --- 3. 纯净版绘图 (无任何文字标签) ---
+fig = plt.figure(figsize=(15, 5))
 
-# 表1：马吕斯定律
-st.subheader("📝 表1：马吕斯定律验证 (2mW 档位)")
-cols1 = [f"{i}°" for i in range(0, 91, 15)]
-df1 = pd.DataFrame([[0.0] * len(cols1)], columns=cols1, index=["I_测 (mW)"])
-edited_df1 = st.data_editor(df1, use_container_width=True, key="table1")
+# 图1：马吕斯定律 (直角坐标系)
+ax1 = fig.add_subplot(131)
+ax1.plot(theta_1_deg, i_measured_1, 'ro-')  # 测量值 (红实线)
+ax1.plot(theta_1_deg, i_theory_1, 'b^--')   # 理论值 (蓝虚线)
+ax1.set_xticks(theta_1_deg)
+ax1.grid(True, linestyle='--', alpha=0.6)
 
-# 表2：1/2 波片调节
-st.subheader("📝 表2：1/2 波片调节 (2mW 档位)")
-cols2 = [f"{i}°" for i in range(0, 361, 15)]
-df2 = pd.DataFrame([[0.0] * len(cols2)], columns=cols2, index=["I_测 (mW)"])
-edited_df2 = st.data_editor(df2, use_container_width=True, key="table2")
+# 图2：1/2 波片 (极坐标系)
+ax2 = fig.add_subplot(132, projection='polar')
+ax2.plot(theta_2_rad, i_measured_2, 'bo-', linewidth=1.5)
+ax2.set_theta_zero_location("E") # 0度在右侧
 
-# 表3：1/4 波片调节
-st.subheader("📝 表3：1/4 波片调节 (2mW 档位)")
-cols3 = [f"{i}°" for i in range(0, 361, 30)]
-df3 = pd.DataFrame([[0.0] * len(cols3) for _ in range(3)], 
-                   columns=cols3, 
-                   index=["消光处+30°", "消光处+45°", "消光处+90°"])
-edited_df3 = st.data_editor(df3, use_container_width=True, key="table3")
+# 图3：1/4 波片 (极坐标系)
+ax3 = fig.add_subplot(133, projection='polar')
+ax3.plot(theta_3_rad, i_30, 'ro-')
+ax3.plot(theta_3_rad, i_45, 'go-')
+ax3.plot(theta_3_rad, i_90, 'bo-')
+ax3.set_theta_zero_location("E")
 
-st.divider()
-
-# --- 5. 绘图逻辑 ---
-if st.button("🚀 点击生成实验图像", type="primary", use_container_width=True):
-    try:
-        # 数据读取与转换 
-        i_measured_1 = edited_df1.iloc[0].values.astype(float)
-        theta_1_deg = np.array([0, 15, 30, 45, 60, 75, 90])
-        # 理论值计算过程：I_理 = I_max * cos^2(theta) [cite: 19]
-        i_theory_1 = i_measured_1[0] * np.cos(np.radians(theta_1_deg))**2
-
-        i_measured_2 = edited_df2.iloc[0].values.astype(float)
-        theta_2_rad = np.radians(np.arange(0, 361, 15))
-
-        i_30 = edited_df3.iloc[0].values.astype(float)
-        i_45 = edited_df3.iloc[1].values.astype(float)
-        i_90 = edited_df3.iloc[2].values.astype(float)
-        theta_3_rad = np.radians(np.arange(0, 361, 30))
-
-        # 创建布局 [cite: 20]
-        col1, col2, col3 = st.columns(3)
-
-        # 图像 1：马吕斯定律 (直角坐标)
-        with col1:
-            fig1, ax1 = plt.subplots(figsize=(5, 5))
-            ax1.plot(theta_1_deg, i_measured_1, 'ro-', label='测量值 ($I_{测}$)')
-            ax1.plot(theta_1_deg, i_theory_1, 'b^--', label='理论值 ($I_{理}$)')
-            ax1.set_title('图1：马吕斯定律验证', fontsize=12)
-            ax1.set_xlabel('夹角 $\\theta$ (°)')
-            ax1.set_ylabel('光强 $I$ (mW)')
-            ax1.set_xticks(theta_1_deg)
-            ax1.legend()
-            ax1.grid(True, linestyle='--', alpha=0.6)
-            st.pyplot(fig1)
-
-        # 图像 2：1/2 波片 (极坐标) 
-        with col2:
-            fig2 = plt.figure(figsize=(5, 5))
-            ax2 = fig2.add_subplot(111, projection='polar')
-            ax2.plot(theta_2_rad, i_measured_2, 'bo-', linewidth=1.5, label='1/2波片')
-            ax2.set_title('图2：1/2 波片极坐标图', va='bottom', fontsize=12, pad=20)
-            ax2.set_theta_zero_location("E") # 0度在右侧
-            ax2.legend(loc='upper right', bbox_to_anchor=(1.1, 1.1))
-            st.pyplot(fig2)
-
-        # 图像 3：1/4 波片 (极坐标)
-        with col3:
-            fig3 = plt.figure(figsize=(5, 5))
-            ax3 = fig3.add_subplot(111, projection='polar')
-            ax3.plot(theta_3_rad, i_30, 'ro-', label='+30° (椭圆)')
-            ax3.plot(theta_3_rad, i_45, 'go-', label='+45° (圆)')
-            ax3.plot(theta_3_rad, i_90, 'bo-', label='+90° (线)')
-            ax3.set_title('图3：1/4 波片极坐标图', va='bottom', fontsize=12, pad=20)
-            ax3.set_theta_zero_location("E")
-            ax3.legend(loc='upper right', bbox_to_anchor=(1.1, 1.1))
-            st.pyplot(fig3)
-            
-        st.success("✅ 处理成功！请检查生成的图像。")
-        
-    except Exception as e:
-        st.error(f"❌ 运行出错：{e}。请检查表格中是否填入了非数字内容。")
+plt.tight_layout()
+plt.show()
