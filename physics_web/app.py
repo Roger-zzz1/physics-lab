@@ -9,13 +9,27 @@ import matplotlib.font_manager as font_manager
 # --- 1. 页面配置 ---
 st.set_page_config(page_title="偏振光实验数据处理", layout="wide")
 
-# --- 2. 中文字体终极修正法 (强行下载并加载黑体) ---
+# --- 2. 中文字体修正 (添加请求头防止被拦截) ---
 font_path = "SimHei.ttf"
-# 如果服务器里没有字体文件，就自动从网上下载一个
+
 if not os.path.exists(font_path):
     url = "https://raw.githubusercontent.com/halfrost/Halfrost-Field/master/recipes/SimHei.ttf"
-    urllib.request.urlretrieve(url, font_path)
+    try:
+        # 构造带有浏览器标识的请求
+        opener = urllib.request.build_opener()
+        opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')]
+        urllib.request.install_opener(opener)
+        
+        # 执行下载
+        urllib.request.urlretrieve(url, font_path)
+    except Exception as e:
+        st.error(f"字体下载失败: {e}")
+        # 如果下载失败，尝试使用系统默认字体以免崩溃
+        plt.rcParams['font.sans-serif'] = ['DejaVu Sans'] 
 
+if os.path.exists(font_path):
+    font_manager.fontManager.addfont(font_path)
+    plt.rcParams['font.sans-serif'] = ['SimHei']
 # 强制 Matplotlib 识别并使用这个字体
 font_manager.fontManager.addfont(font_path)
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 指定使用黑体
